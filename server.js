@@ -40,8 +40,8 @@ app.use('/api/users', usersRouter);  // Prefixando todas as rotas de usuário co
 // Configuração do banco de dados MySQL
 const db = mysql.createConnection({
   host: 'localhost',
-  user: 'projetob1',
-  password: '1234',
+  user: 'isa',
+  password: 'qwerpoiu',
   database: 'produtos_db',
 });
 

@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // Importa o hook para navegar
 
 const CadastroPage = () => {
   const [nome, setNome] = useState('');
   const [descricao, setDescricao] = useState('');
   const [preco, setPreco] = useState('');
+
+  const navigate = useNavigate(); // Inicializa o hook
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,13 +20,17 @@ const CadastroPage = () => {
 
     try {
       const response = await axios.post('http://localhost:5000/api/produtos', novoProduto);
-      alert(response.data.message);  // Mensagem de sucesso
+      alert(response.data.message); // Mensagem de sucesso
       setNome('');
       setDescricao('');
       setPreco('');
     } catch (error) {
       console.error('Erro ao cadastrar produto:', error);
     }
+  };
+
+  const voltar = () => {
+    navigate(-1); // Volta para a tela anterior
   };
 
   return (
@@ -63,6 +70,13 @@ const CadastroPage = () => {
           />
         </div>
         <button type="submit" className="btn btn-primary w-100">Cadastrar Produto</button>
+        <button
+          type="button"
+          className="btn btn-secondary w-100 mt-3"
+          onClick={voltar}
+        >
+          Voltar
+        </button>
       </form>
     </div>
   );

@@ -95,9 +95,9 @@ const CartPage = () => {
       {/* Botão para voltar à página inicial */}
       <button 
         className="btn btn-secondary mt-3 ms-3"
-        onClick={() => navigate('/')}
+        onClick={() => navigate(-1)}
       >
-        Voltar à Página Inicial
+        Voltar
       </button>
     </div>
   );
