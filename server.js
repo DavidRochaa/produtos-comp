@@ -1,126 +1,128 @@
-// Importando dependências
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const mysql = require('mysql2');
-const bodyParser = require('body-parser');
-const { generateToken, verifyToken } = require('./auth');  // Importando as funções do auth.js
-const usersRouter = require('./routes/users');  // Importando as rotas de usuários
+// require('dotenv').config();
+// const express = require('express');
+// const cors = require('cors');
+// const sql = require('mssql');
+// const bodyParser = require('body-parser');
+// const { generateToken, verifyToken } = require('./auth');
+// const usersRouter = require('./routes/users');
 
-const app = express();
+// const app = express();
 
-// Configuração de middlewares
-app.use(cors());
-app.use(bodyParser.json()); // Para processar JSON no corpo da requisição
+// app.use(cors());
+// app.use(bodyParser.json());
 
-// Rota principal redirecionando para a página de login
-app.get('/', (req, res) => {
-  res.redirect('/login'); 
-});
+// // Configuração da conexão com SQL Server (Azure)
+// const dbConfig = {
+//   user: 'root-mercado',
+//   password: 'c#<NFX(931Y]H|t',
+//   server: 'gerenciamentomercado-dbserver.database.windows.net',
+//   database: 'gerenciamentomercado-db',
+//   port: 1433,
+//   options: {
+//     encrypt: true,
+//     trustServerCertificate: false
+//   }
+// };
 
-// Rota de login
-app.post('/login', async (req, res) => {
-    const { email, senha } = req.body;
+// // Middleware de pool
+// async function getPool() {
+//   try {
+//     const pool = await sql.connect(dbConfig);
+//     return pool;
+//   } catch (err) {
+//     console.error('Erro ao conectar no banco SQL Server:', err);
+//     throw err;
+//   }
+// }
 
-    // Verificar se as credenciais são válidas (exemplo simplificado)
-    const usuario = { id: 1, email }; // Aqui você consultaria seu banco de dados
+// // Rota principal
+// app.get('/', (req, res) => {
+//   res.redirect('/login');
+// });
 
-    const token = await generateToken(usuario); // Gera o token JWT
-    res.json({ token }); // Retorna o token para o cliente
-});
+// // Rota de login simplificada
+// app.post('/login', async (req, res) => {
+//   const { email, senha } = req.body;
+//   const usuario = { id: 1, email }; // Exemplo fictício
+//   const token = await generateToken(usuario);
+//   res.json({ token });
+// });
 
-// Rota de cadastro (signup)
-app.get('/register', (req, res) => {
-  res.send('Página de Criação de Conta');
-});
+// // Página de cadastro
+// app.get('/register', (req, res) => {
+//   res.send('Página de Criação de Conta');
+// });
 
-// Usando as rotas de usuários
-app.use('/api/users', usersRouter);  // Prefixando todas as rotas de usuário com '/api/users'
+// // Usando as rotas de usuários
+// app.use('/api/users', usersRouter);
 
-// Configuração do banco de dados MySQL
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'isa',
-  password: 'qwerpoiu',
-  database: 'produtos_db',
-});
+// // Rota protegida de produtos
+// app.get('/api/produtos', verifyToken, async (req, res) => {
+//   try {
+//     const pool = await getPool();
+//     const result = await pool.request().query('SELECT * FROM produtos');
+//     res.json(result.recordset);
+//   } catch (err) {
+//     console.error('Erro ao listar produtos:', err);
+//     res.status(500).send('Erro ao listar produtos');
+//   }
+// });
 
-// Conectando ao banco de dados
-db.connect((err) => {
-  if (err) {
-    console.error('Erro ao conectar ao banco de dados:', err);
-    return;
-  }
-  console.log('Conectado ao banco de dados MySQL');
-});
+// // Verifica/cria tabelas se não existirem
+// const checkAndCreateTables = async () => {
+//   try {
+//     const pool = await getPool();
 
-// Adicionando a rota para '/api/produtos' com proteção de token
-app.get('/api/produtos', verifyToken, async (req, res) => {
-  try {
-    // Consultando todos os produtos da tabela 'produtos'
-    const [rows] = await db.promise().query('SELECT * FROM produtos');
-    res.json(rows);  // Retorna os produtos como resposta JSON
-  } catch (err) {
-    console.error('Erro ao listar produtos:', err);
-    res.status(500).send('Erro ao listar produtos');
-  }
-});
+//     // Verifica/cria tabela usuarios
+//     const usuariosCheck = await pool.request().query(`
+//       IF NOT EXISTS (
+//         SELECT * FROM INFORMATION_SCHEMA.TABLES 
+//         WHERE TABLE_NAME = 'usuarios'
+//       )
+//       BEGIN
+//         CREATE TABLE usuarios (
+//           id INT IDENTITY(1,1) PRIMARY KEY,
+//           nome VARCHAR(100) NOT NULL,
+//           email VARCHAR(100) NOT NULL UNIQUE,
+//           senha VARCHAR(255) NOT NULL
+//         )
+//       END
+//     `);
+//     console.log('Verificação da tabela "usuarios" concluída.');
 
-// Função para verificar e criar as tabelas 'usuarios' e 'fornecedores' (já está no seu código)
-const checkAndCreateTables = async () => {
-  try {
-    // Verificando e criando a tabela 'usuarios'
-    const [usuarioRows] = await db.promise().query(`
-      SELECT * FROM information_schema.tables 
-      WHERE table_schema = 'produtos_db' AND table_name = 'usuarios';
-    `);
+//     // Verifica/cria tabela fornecedores
+//     const fornecedoresCheck = await pool.request().query(`
+//       IF NOT EXISTS (
+//         SELECT * FROM INFORMATION_SCHEMA.TABLES 
+//         WHERE TABLE_NAME = 'fornecedores'
+//       )
+//       BEGIN
+//         CREATE TABLE fornecedores (
+//           id INT IDENTITY(1,1) PRIMARY KEY,
+//           nome VARCHAR(100) NOT NULL,
+//           cnpj VARCHAR(14) NOT NULL UNIQUE,
+//           telefone VARCHAR(15) NOT NULL,
+//           endereco VARCHAR(255)
+//         )
+//       END
+//     `);
+//     console.log('Verificação da tabela "fornecedores" concluída.');
 
-    if (usuarioRows.length === 0) {
-      const createUsuariosTableQuery = `
-        CREATE TABLE usuarios (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          nome VARCHAR(100) NOT NULL,
-          email VARCHAR(100) NOT NULL UNIQUE,
-          senha VARCHAR(255) NOT NULL
-        );
-      `;
-      await db.promise().query(createUsuariosTableQuery);
-      console.log('Tabela "usuarios" criada com sucesso!');
-    } else {
-      console.log('A tabela "usuarios" já existe.');
-    }
+//   } catch (err) {
+//     console.error('Erro ao verificar/criar tabelas:', err);
+//   }
+// };
 
-    // Verificando e criando a tabela 'fornecedores'
-    const [fornecedoresRows] = await db.promise().query(`
-      SELECT * FROM information_schema.tables 
-      WHERE table_schema = 'produtos_db' AND table_name = 'fornecedores';
-    `);
+// checkAndCreateTables();
 
-    if (fornecedoresRows.length === 0) {
-      const createFornecedoresTableQuery = `
-        CREATE TABLE fornecedores (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          nome VARCHAR(100) NOT NULL,
-          cnpj VARCHAR(14) NOT NULL UNIQUE,
-          telefone VARCHAR(15) NOT NULL,
-          endereco VARCHAR(255)
-        );
-      `;
-      await db.promise().query(createFornecedoresTableQuery);
-      console.log('Tabela "fornecedores" criada com sucesso!');
-    } else {
-      console.log('A tabela "fornecedores" já existe.');
-    }
+// // Inicia o servidor
+// app.listen(5000, () => {
+//   console.log('Servidor rodando na porta 5000');
+// });
 
-  } catch (err) {
-    console.error('Erro ao verificar/criar as tabelas:', err);
-  }
-};
+const app = require('./app');
+const PORT = process.env.PORT || 5000;
 
-// Chama a função para verificar e criar as tabelas quando o servidor iniciar
-checkAndCreateTables();
-
-// Rodando o servidor na porta 5000
-app.listen(5000, () => {
-  console.log('Servidor rodando na porta 5000');
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
